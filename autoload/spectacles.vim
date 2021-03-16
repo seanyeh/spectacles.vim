@@ -3,6 +3,13 @@ if exists('g:autoloaded_spectacles')
 endif
 let g:autoloaded_spectacles = 1
 
+if !exists('g:spectacles_rspec_command')
+    let g:spectacles_rspec_command = 'rspec'
+endif
+if !exists('g:spectacles_rspec_run_background')
+    let g:spectacles_rspec_run_background = 0
+endif
+
 " Navigate methods
 function! spectacles#NavigateHelper(function_name, ...)
     let line_number = call(a:function_name, a:000)
@@ -113,4 +120,19 @@ function! spectacles#GetString(line_number)
     endif
 
     return 0
+endfunction
+
+function! spectacles#RunTest(...)
+    let filename = a:0 == 0 ? expand('%') : a:1
+    let cmd = g:spectacles_rspec_command.' "'.filename.'"'
+
+    if g:spectacles_rspec_run_background
+        call system(cmd)
+    else
+        exe 'terminal '.cmd
+    endif
+endfunction
+
+function! spectacles#RunCurrentTest()
+    call spectacles#RunTest(expand('%').':'.line('.'))
 endfunction
