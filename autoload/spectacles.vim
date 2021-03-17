@@ -11,7 +11,7 @@ if !exists('g:spectacles_rspec_run_background')
 endif
 
 " Navigate methods
-function! spectacles#NavigateHelper(function_name, ...)
+function! s:NavigateHelper(function_name, ...)
     let line_number = call(a:function_name, a:000)
     if line_number
         exe 'normal! '.line_number.'gg'
@@ -19,15 +19,15 @@ function! spectacles#NavigateHelper(function_name, ...)
 endfunction
 
 function! spectacles#NavigateParentTop()
-    call spectacles#NavigateHelper('spectacles#FindParent', -1)
+    call s:NavigateHelper('spectacles#FindParent', -1)
 endfunction
 
 function! spectacles#NavigateParentBottom()
-    call spectacles#NavigateHelper('spectacles#FindParent', 1)
+    call s:NavigateHelper('spectacles#FindParent', 1)
 endfunction
 
 function! spectacles#NavigateDefinition()
-    call spectacles#NavigateHelper('spectacles#FindDefinition', line('.'))
+    call s:NavigateHelper('spectacles#FindDefinition', line('.'))
 endfunction
 
 " Search functions
