@@ -19,19 +19,19 @@ function! s:NavigateHelper(function_name, ...)
 endfunction
 
 function! spectacles#NavigateParentTop()
-    call s:NavigateHelper('spectacles#FindParent', -1)
+    call s:NavigateHelper('spectacles#FindParent', line('.'), -1)
 endfunction
 
 function! spectacles#NavigateParentBottom()
-    call s:NavigateHelper('spectacles#FindParent', 1)
+    call s:NavigateHelper('spectacles#FindParent', line('.'), 1)
 endfunction
 
 function! spectacles#NavigateDefinition()
     call s:NavigateHelper('spectacles#FindDefinition', line('.'))
 endfunction
 
-function! spectacles#NavigateTopParent()
-    call s:NavigateHelper('spectacles#FindTopParentAttribute', line('.'), 'line')
+function! spectacles#NavigateRootParent()
+    call s:NavigateHelper('spectacles#FindRootParentAttribute', line('.'), 'line')
 endfunction
 
 " Search functions
@@ -39,8 +39,8 @@ endfunction
 " Return the line number of the closest line with less indentation
 " If direction is -1, search upwards
 " If direction is 1, search downwards
-function! spectacles#FindParent(direction, ...)
-    let line_number = a:0 == 0 ? line('.') : a:1
+function! spectacles#FindParent(start_line_number, direction)
+    let line_number = a:start_line_number
     let current_indentation = indent(line_number)
     while 1
         let line_number += a:direction
@@ -95,11 +95,11 @@ function! spectacles#FindAncestry(line_number)
         let current = [{'line': a:line_number, 'indent': current_indentation, 'string': current_string}]
     endif
 
-    let parent_line = spectacles#FindParent(-1, a:line_number)
+    let parent_line = spectacles#FindParent(a:line_number, -1)
     return spectacles#FindAncestry(parent_line) + current
 endfunction
 
-function! spectacles#FindTopParent(line_number)
+function! spectacles#FindRootParent(line_number)
     let ancestry = spectacles#FindAncestry(a:line_number)
 
     for info in ancestry
@@ -111,8 +111,8 @@ function! spectacles#FindTopParent(line_number)
     return {}
 endfunction
 
-function! spectacles#FindTopParentAttribute(line_number, attribute)
-    let parent = spectacles#FindTopParent(a:line_number)
+function! spectacles#FindRootParentAttribute(line_number, attribute)
+    let parent = spectacles#FindRootParent(a:line_number)
     if len(parent)
         return parent[a:attribute]
     endif
