@@ -30,13 +30,17 @@ function! spectacles#NavigateDefinition()
     call s:NavigateHelper('spectacles#FindDefinition', line('.'))
 endfunction
 
+function! spectacles#NavigateTopParent()
+    call s:NavigateHelper('spectacles#FindTopParentAttribute', line('.'), 'line')
+endfunction
+
 " Search functions
 
 " Return the line number of the closest line with less indentation
 " If direction is -1, search upwards
 " If direction is 1, search downwards
-function! spectacles#FindParent(direction)
-    let line_number = line('.')
+function! spectacles#FindParent(direction, ...)
+    let line_number = a:0 == 0 ? line('.') : a:1
     let current_indentation = indent(line_number)
     while 1
         let line_number += a:direction
@@ -78,6 +82,42 @@ function! spectacles#IsSharedExample(line_number)
     return spectacles#MatchFirst(a:line_number, ["include_examples", "it_behaves_like", "it_should_behave_like"])
 endfunction
 
+function! spectacles#FindAncestry(line_number)
+    if !a:line_number
+        return []
+    endif
+
+    let current_indentation = indent(a:line_number)
+    let current_string = spectacles#GetString(a:line_number)
+
+    let current = []
+    if spectacles#IsTestHeader(a:line_number) && len(current_string)
+        let current = [{'line': a:line_number, 'indent': current_indentation, 'string': current_string}]
+    endif
+
+    let parent_line = spectacles#FindParent(-1, a:line_number)
+    return spectacles#FindAncestry(parent_line) + current
+endfunction
+
+function! spectacles#FindTopParent(line_number)
+    let ancestry = spectacles#FindAncestry(a:line_number)
+
+    for info in ancestry
+        if info['indent'] > 0
+            return info
+        endif
+    endfor
+
+    return {}
+endfunction
+
+function! spectacles#FindTopParentAttribute(line_number, attribute)
+    let parent = spectacles#FindTopParent(a:line_number)
+    if len(parent)
+        return parent[a:attribute]
+    endif
+endfunction
+
 " Helper functions
 
 " Returns whether the first word in the given matches the word_list
@@ -111,7 +151,7 @@ function! spectacles#GetString(line_number)
     elseif len(match_single[0])
         return match_single[0][1:-2]
     else
-        return 0
+        return ""
     endif
 
     if len(match_double[0]) && match_double[1] < match_single[1]
@@ -119,7 +159,7 @@ function! spectacles#GetString(line_number)
         return match_single[0][1:-2]
     endif
 
-    return 0
+    return ""
 endfunction
 
 function! spectacles#RunTest(...)
